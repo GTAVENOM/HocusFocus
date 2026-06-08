@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers the workflow whenever a tag starting with 'v' is pushed (e.g., v1.0.0)
+
+jobs:
+  build-release:
+    name: Build and Release
+    runs-on: macos-latest
+    permissions:
+      contents: write # Grants write access to publish the release
+
+    steps:
+      # 1. Check out the source code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Rust and install cross-compilation targets
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin, aarch64-apple-darwin
+
+      # 3. Cache dependencies to speed up future builds
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry/
+            ~/.cargo/git/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # 4. Compile the binaries for both Intel and Apple Silicon targets
+      - name: Build for Intel Mac (x86_64)
+        run: cargo build --release --target x86_64-apple-darwin
+
+      # 5. Compile for Apple Silicon Mac (ARM64)
+      - name: Build for Apple Silicon (aarch64)
+        run: cargo build --release --target aarch64-apple-darwin
+
+      # 6. Organize and rename the binaries for release
+      - name: Prepare assets
+        run: |
+          mkdir -p dist
+          cp target/x86_64-apple-darwin/release/hocus-focus dist/hocus-focus-x86_64-apple-darwin
+          cp target/aarch64-apple-darwin/release/hocus-focus dist/hocus-focus-aarch64-apple-darwin
+
+      # 7. Create a draft GitHub Release and upload the compiled assets
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/hocus-focus-x86_64-apple-darwin
+            dist/hocus-focus-aarch64-apple-darwin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
