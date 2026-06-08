@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
+use std::process::Command;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config{
@@ -75,11 +76,34 @@ impl Config{
     }
 }
 
-pub fn get_default_config_path()-> Option<PathBuf>{
-    dirs::home_dir().map(|mut p|{
+pub fn get_default_config_path() -> Option<PathBuf> {
+    if let Some(username) = get_console_user() {
+        let mut p = PathBuf::from("/Users");
+        p.push(username);
+        p.push(".config");
+        p.push("hocus-focus");
+        p.push("config.toml");
+        return Some(p);
+    }
+    dirs::home_dir().map(|mut p| {
         p.push(".config");
         p.push("hocus-focus");
         p.push("config.toml");
         p
     })
+}
+
+fn get_console_user() -> Option<String> {
+    let output = Command::new("stat")
+        .args(["-f", "%Su", "/dev/console"])
+        .output()
+        .ok()?;
+    if output.status.success() {
+        let username = String::from_utf8(output.stdout).ok()?;
+        let trimmed = username.trim().to_string();
+        if !trimmed.is_empty() && trimmed != "root" {
+            return Some(trimmed);
+        }
+    }
+    None
 }
