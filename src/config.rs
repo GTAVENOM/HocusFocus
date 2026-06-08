@@ -76,7 +76,8 @@ impl Config{
 }
 
 pub fn get_default_config_path()-> Option<PathBuf>{
-    dirs::config_dir().map(|mut p|{
+    dirs::home_dir().map(|mut p|{
+        p.push(".config");
         p.push("hocus-focus");
         p.push("config.toml");
         p
