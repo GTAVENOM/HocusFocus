@@ -45,8 +45,8 @@ jobs:
       - name: Prepare assets
         run: |
           mkdir -p dist
-          cp target/x86_64-apple-darwin/release/hocus-focus dist/hocus-focus-x86_64-apple-darwin
-          cp target/aarch64-apple-darwin/release/hocus-focus dist/hocus-focus-aarch64-apple-darwin
+          cp target/x86_64-apple-darwin/release/HocusFocus dist/hocus-focus-x86_64-apple-darwin
+          cp target/aarch64-apple-darwin/release/HocusFocus dist/hocus-focus-aarch64-apple-darwin
 
       # 7. Create a draft GitHub Release and upload the compiled assets
       - name: Create GitHub Release
